@@ -4,7 +4,7 @@
 
 #include "Sys/Exception/Impl.hpp"
 
-namespace CC::Sys::Exception
+namespace Aurora::Sys::Exception
 {
     void SetExceptionCallbacks()
     {

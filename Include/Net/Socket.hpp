@@ -5,7 +5,7 @@
 #include <mutex>
 #include <algorithm>
 
-namespace CC::Net
+namespace Aurora::Net
 {
     class Socket
     {

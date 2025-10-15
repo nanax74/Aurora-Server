@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-namespace CC::Net
+namespace Aurora::Net
 {
     Socket::Result Socket::create(bool nonBlocking, bool noDelay)
     {

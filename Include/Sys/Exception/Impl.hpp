@@ -7,7 +7,7 @@
 #include "Sys/Exception/Base.hpp"
 #include "Util/Singleton.hpp"
 
-namespace CC::Sys::Exception
+namespace Aurora::Sys::Exception
 {
     std::deque<OSContext> queue;
 

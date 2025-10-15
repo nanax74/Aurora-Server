@@ -11,7 +11,7 @@
 // this
 #include <Util/Singleton.hpp>
 
-namespace CC::Sys::Exception
+namespace Aurora::Sys::Exception
 {
     template <typename T>
     class Base : public Util::Singleton<T>

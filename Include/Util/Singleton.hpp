@@ -1,6 +1,6 @@
 #pragma once
 
-namespace CC::Util
+namespace Aurora::Util
 {
     template <typename T>
     class Singleton

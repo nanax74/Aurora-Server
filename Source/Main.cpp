@@ -24,16 +24,16 @@ WUPS_USE_STORAGE("Stardust"); // ON_APPLICATION_REQUESTS_EXITに必要
 
 INITIALIZE_PLUGIN()
 {
-    CC::Sys::Debug::Notification::init();
-    CC::Sys::Exception::SetExceptionCallbacks();
+    Aurora::Sys::Debug::Notification::init();
+    Aurora::Sys::Exception::SetExceptionCallbacks();
 }
 
 ON_APPLICATION_START()
 {
-    CC::Sys::Debug::Logger::init();
+    Aurora::Sys::Debug::Logger::init();
 }
 
 ON_APPLICATION_REQUESTS_EXIT()
 {
-    CC::Sys::Debug::Logger::shutdown();
+    Aurora::Sys::Debug::Logger::shutdown();
 }
