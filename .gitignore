@@ -1,0 +1,5 @@
+.vscode/
+Build/
+*.elf
+*.wps
+*.lst
