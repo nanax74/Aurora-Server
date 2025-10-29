@@ -45,12 +45,12 @@ namespace Aurora::Sys::Debug
         try
         {
             std::string formatted = std::format(fmt, std::forward<Args>(args)...);
-            std::string final_msg = std::format("[Stardust] {}", formatted);
+            std::string final_msg = std::format("[Aurora] {}", formatted);
             return WHBLogPrintf("%s", final_msg.c_str()) != 0;
         }
         catch (const std::format_error& e)
         {
-            WHBLogPrintf("[Stardust][format error] %s", e.what());
+            WHBLogPrintf("[Aurora][format error] %s", e.what());
             return false;
         }
     }

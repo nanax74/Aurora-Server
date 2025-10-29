@@ -51,12 +51,12 @@ namespace Aurora::Sys::Debug
         try
         {
             std::string formatted = std::format(fmt, std::forward<Args>(args)...);
-            std::string final_msg = std::format("[Stardust] {}", formatted);
+            std::string final_msg = std::format("[Aurora] {}", formatted);
             return NotificationModule_AddInfoNotification(final_msg.c_str()) != NOTIFICATION_MODULE_RESULT_SUCCESS;
         }
         catch (const std::format_error& e)
         {
-            std::string formatted = std::format("[Stardust][format error] {}", e.what());
+            std::string formatted = std::format("[Aurora][format error] {}", e.what());
             NotificationModule_AddInfoNotification(formatted.c_str());
             return false;
         }
@@ -69,12 +69,12 @@ namespace Aurora::Sys::Debug
         try
         {
             std::string formatted = std::format(fmt, std::forward<Args>(args)...);
-            std::string final_msg = std::format("[Stardust] {}", formatted);
+            std::string final_msg = std::format("[Aurora] {}", formatted);
             return NotificationModule_AddErrorNotification(final_msg.c_str()) != NOTIFICATION_MODULE_RESULT_SUCCESS;
         }
         catch (const std::format_error& e)
         {
-            std::string formatted = std::format("[Stardust][format error] {}", e.what());
+            std::string formatted = std::format("[Aurora][format error] {}", e.what());
             NotificationModule_AddErrorNotification(formatted.c_str());
             return false;
         }

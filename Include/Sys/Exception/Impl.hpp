@@ -5,11 +5,10 @@
 
 // this
 #include "Sys/Exception/Base.hpp"
-#include "Util/Singleton.hpp"
 
 namespace Aurora::Sys::Exception
 {
-    std::deque<OSContext> queue;
+    inline std::deque<OSContext> queue;
 
     class SystemReset : public Base<SystemReset>
     {
