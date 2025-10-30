@@ -1,7 +1,7 @@
 #pragma once
 
+#include "Net/Socket/Interface/Stream.hpp"
 #include "Util/Thread.hpp"
-#include "Net/Socket/Interface.hpp"
 #include "Sys/Debug/Logger.hpp"
 
 #include <mutex>
@@ -13,11 +13,11 @@ namespace Aurora::Net::Thread
     class Release : public Util::Thread
     {
     private:
-        std::vector<std::unique_ptr<Net::Socket::Interface>> &clients;
+        std::vector<std::unique_ptr<Net::Socket::Interface::Stream>> &clients;
         std::mutex &clientsMutex;
 
     public:
-        Release(std::vector<std::unique_ptr<Net::Socket::Interface>> &clients, std::mutex &clientsMutex) : Util::Thread(10), clients(clients), clientsMutex(clientsMutex) {}
+        Release(std::vector<std::unique_ptr<Net::Socket::Interface::Stream>> &clients, std::mutex &clientsMutex) : Util::Thread(10), clients(clients), clientsMutex(clientsMutex) {}
 
         void process() override
         {
@@ -30,17 +30,19 @@ namespace Aurora::Net::Thread
                 if (client->isClosed().value_or(true))
                 {
                     auto fd = client->getFd();
-                    auto ip = client->getIp();
-                    auto port = client->getPort();
+
+                    Socket::Endpoint endpoint = client->getRemoteEndpoint().value_or(Socket::Endpoint{0, 0});
+                    uint32_t ip = endpoint.ip;
+                    uint16_t port = endpoint.port;
                 
-                    if(fd && ip && port)
+                    if(fd)
                     {
                         in_addr addr;
-                        addr.s_addr = ip.value();
+                        addr.s_addr = ip;
                         char buf[INET_ADDRSTRLEN];
                         inet_ntop(AF_INET, &addr, buf, sizeof(buf));
                         std::string ipStr(buf);
-                        Sys::Debug::Logger::printf("Disconnected: (Fd:{} Ip:{} Port:{})", fd.value(), ipStr, port.value());
+                        Sys::Debug::Logger::printf("Disconnected: (Fd:{} Ip:{} Port:{})", fd.value(), ipStr, port);
                     }
                 
                     it = clients.erase(it);

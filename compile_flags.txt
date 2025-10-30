@@ -1,6 +1,7 @@
 --target=powerpc-eabi
 
 -Wall
+
 -std=c++23
 
 -IInclude

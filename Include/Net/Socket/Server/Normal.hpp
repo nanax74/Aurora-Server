@@ -1,7 +1,8 @@
 #pragma once
 
-#include "Net/Socket/Interface.hpp"
-#include "Net/Socket/PassiveClient.hpp"
+#include "Net/Socket/Interface/Listener.hpp"
+#include "Net/Socket/Client/Passive.hpp"
+#include "Net/Socket/Client/Invalid.hpp"
 
 #include <memory>
 #include <optional>
@@ -10,9 +11,9 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
-namespace Aurora::Net::Socket
+namespace Aurora::Net::Socket::Server
 {
-    class Server : public Interface
+    class Normal : public Interface::Listener
     {
     private:
         std::optional<int> fd;
@@ -25,8 +26,8 @@ namespace Aurora::Net::Socket
         }
 
     public:
-        Server(uint16_t port) : port(port) { socket(); }
-        ~Server() { close(); }
+        explicit Normal(uint16_t port) : port(port) { socket(); }
+        ~Normal() { close(); }
 
         bool bind() override
         {
@@ -49,19 +50,19 @@ namespace Aurora::Net::Socket
             return false;
         }
 
-        std::unique_ptr<Interface> accept() override
+        std::unique_ptr<Interface::Stream> accept() override
         {
-            if(!fd) return std::make_unique<Invalid>();
+            if(!fd) return std::make_unique<Client::Invalid>();
 
             sockaddr_in addr;
             socklen_t addrlen = sizeof(addr);
 
             int clientFd = ::accept(fd.value(), (sockaddr*)&addr, &addrlen);
-            if(clientFd == -1) return std::make_unique<Invalid>();
+            if(clientFd == -1) return std::make_unique<Client::Invalid>();
 
             uint32_t ip = ntohl(addr.sin_addr.s_addr);
             uint16_t port = ntohs(addr.sin_port);
-            return std::make_unique<PassiveClient>(clientFd, ip, port);
+            return std::make_unique<Client::Passive>(clientFd, ip, port);
         }
 
         bool close() override
@@ -69,43 +70,14 @@ namespace Aurora::Net::Socket
             return (fd && ::close(fd.value()) != -1);
         }
 
-        std::optional<int> recv(std::vector<uint8_t>& buffer) override
-        {
-            if(fd < 0) return false;
-
-            int ret = ::recv(fd.value(), buffer.data(), buffer.size(), 0);
-
-            if(ret <= 0)
-            {
-                close();
-                return std::nullopt;
-            }
-            return ret;
-        }
-
-        bool send() override
-        {
-            return false; // TODO
-        }
-
-        bool connect(uint32_t ip, uint16_t port) override
-        {
-            return false;
-        }
-
         std::optional<int> getFd() override
         {
             return fd;
         }
 
-        std::optional<uint32_t> getIp() override
+        std::optional<Endpoint> getLocalEndpoint() override
         {
-            return std::nullopt;
-        }
-
-        std::optional<uint16_t> getPort() override
-        {
-            return port;
+            return Endpoint{0, port}; // TODO
         }
 
         std::optional<bool> isClosed() override
