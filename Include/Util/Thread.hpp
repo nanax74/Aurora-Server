@@ -9,11 +9,13 @@ namespace Aurora::Util
     private:
         void loop()
         {
+            start();
             while(running)
             {
-                process();
+                update();
                 std::this_thread::sleep_for(std::chrono::milliseconds(sleepMs));
             }
+            end();
         };
 
         bool running;
@@ -22,7 +24,9 @@ namespace Aurora::Util
 
     protected:
         Thread(int sleepMs) : running(false), sleepMs(sleepMs) {}
-        virtual void process() {};
+        virtual void start() {};
+        virtual void update() {};
+        virtual void end() {};
 
     public:
         virtual ~Thread() = default;

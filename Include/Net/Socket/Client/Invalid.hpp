@@ -42,7 +42,7 @@ namespace Aurora::Net::Socket::Client
             return std::nullopt;
         }
 
-        virtual bool send()
+        virtual bool send(const std::vector<uint8_t>& buffer)
         {
             return false;
         }

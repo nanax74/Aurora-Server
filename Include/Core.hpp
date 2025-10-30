@@ -1,62 +1,44 @@
 #pragma once
 
-#include <memory>
-#include <vector>
-
-#include "Net/Socket/Interface/Stream.hpp"
-#include "Net/Socket/Interface/Listener.hpp"
-#include "Net/Socket/Server/Normal.hpp"
-#include "Net/Socket/Server/Invalid.hpp"
-#include "Net/Thread/Accept.hpp"
-#include "Net/Thread/Receive.hpp"
-#include "Net/Thread/Release.hpp"
+#include "Net/Transport/Connection.hpp"
+#include "Net/Transport/ConnectionManager.hpp"
+#include "Net/Transport/Acceptor.hpp"
+#include "Net/Transport/Dispatcher.hpp"
 #include "Sys/Debug/Logger.hpp"
 #include "Util/Singleton.hpp"
+#include <vector>
 
 namespace Aurora
 {
     class Core : public Util::Singleton<Core>
     {
     private:
-        std::unique_ptr<Net::Socket::Interface::Listener> server;
-        std::vector<std::unique_ptr<Net::Socket::Interface::Stream>> clients;
-        std::mutex clientsMutex;
+        static void processor(Net::Transport::Connection& connection, std::vector<uint8_t> buffer)
+        {
+            std::string str(reinterpret_cast<char*>(buffer.data()), buffer.size());
+            Sys::Debug::Logger::printf("Received: {}", str);
 
-        std::unique_ptr<Util::Thread> acceptThread;
-        std::unique_ptr<Util::Thread> releaseThread;
-        std::unique_ptr<Util::Thread> receiveThread;
+            std::string msg("Welcome to WiiU!\0Extra", 19); // 任意のバイト列
+            std::vector<uint8_t> vec(msg.begin(), msg.end());
+            connection.send(vec);
+        }
+
+        uint16_t port = 55555;    
+
+        Net::Transport::ConnectionManager connectionManager;
+        Net::Transport::Acceptor acceptor = Net::Transport::Acceptor(port, connectionManager);
+        Net::Transport::Dispatcher dispatcher = Net::Transport::Dispatcher(connectionManager, processor);
 
         void start()
         {
-            server = std::make_unique<Net::Socket::Server::Normal>(55555);
-            if(!server->bind() || !server->listen())
-            {
-                server = std::make_unique<Net::Socket::Server::Invalid>();
-                Sys::Debug::Logger::printf("Failed to start server");
-            }
-
-            acceptThread = std::make_unique<Net::Thread::Accept>(server, clients, clientsMutex);
-            acceptThread->run();
-
-            releaseThread = std::make_unique<Net::Thread::Release>(clients, clientsMutex);
-            releaseThread->run();
-
-            receiveThread = std::make_unique<Net::Thread::Receive>(clients, clientsMutex);
-            receiveThread->run();
+            acceptor.run();
+            dispatcher.run();
         }
 
         void end()
         {
-            receiveThread->stop();
-            receiveThread.reset();
-
-            releaseThread->stop();
-            releaseThread.reset();
-
-            acceptThread->stop();
-            acceptThread.reset();
-
-            server.reset();
+            dispatcher.stop();
+            acceptor.stop();
         }
 
     public:

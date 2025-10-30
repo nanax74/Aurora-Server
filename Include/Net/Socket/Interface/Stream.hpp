@@ -13,7 +13,7 @@ namespace Aurora::Net::Socket::Interface
     {
     public:
         virtual std::optional<int> recv(std::vector<uint8_t>& buffer) = 0;
-        virtual bool send() = 0;
+        virtual bool send(const std::vector<uint8_t>& buffer) = 0;
 
         virtual bool connect(uint32_t ip, uint16_t port) = 0;
 

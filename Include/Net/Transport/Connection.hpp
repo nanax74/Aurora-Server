@@ -1,50 +1,43 @@
 #pragma once
 
 #include <memory>
+#include <functional>
 
-/*
+#include <Net/Socket/Interface/Stream.hpp>
+
 namespace Aurora::Net::Transport
 {
     class Connection
     {
     private:
-        std::unique_ptr<Socket::Interface> socket;
+        std::unique_ptr<Socket::Interface::Stream> stream;
 
     public:
-        explicit Connection(std::unique_ptr<Socket::Interface> socket) : socket(std::move(socket)) {}
+        std::function<void(Connection*)> onDisconnect;
 
-        void start()
+        explicit Connection(std::unique_ptr<Socket::Interface::Stream> stream) : stream(std::move(stream)) {}
+
+        std::optional<int> recv(std::vector<uint8_t>& buffer)
         {
-            server = std::make_unique<Net::Socket::Server>(55555);
-            if(!server->bind() || !server->listen())
-            {
-                server = std::make_unique<Net::Socket::Invalid>();
-                Sys::Debug::Logger::printf("Failed to start server");
-            }
-
-            acceptThread = std::make_unique<Net::Thread::Accept>(server, clients, clientsMutex);
-            acceptThread->run();
-
-            releaseThread = std::make_unique<Net::Thread::Release>(clients, clientsMutex);
-            releaseThread->run();
-
-            receiveThread = std::make_unique<Net::Thread::Receive>(clients, clientsMutex);
-            receiveThread->run();
+            if (!stream) return std::nullopt;
+            auto ret = stream->recv(buffer);
+            if(!ret && onDisconnect) onDisconnect(this);
+            return ret;
         }
 
-        void end()
+        bool send(const std::vector<uint8_t>& buffer)
         {
-            receiveThread->stop();
-            receiveThread.reset();
+            stream->send(buffer);
+            return false;
+        }
 
-            releaseThread->stop();
-            releaseThread.reset();
+        std::optional<Socket::Endpoint> local()  { return stream->getLocalEndpoint();  }
+        std::optional<Socket::Endpoint> remote() { return stream->getRemoteEndpoint(); }
 
-            acceptThread->stop();
-            acceptThread.reset();
-
-            server.reset();
+        bool isClosed() const
+        {
+            auto closed = stream->isClosed();
+            return closed.value_or(true);
         }
     };
 }
-*/

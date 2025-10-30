@@ -41,9 +41,29 @@ namespace Aurora::Net::Socket::Client
             return ret;
         }
 
-        bool send() override
+        bool send(const std::vector<uint8_t>& buffer) override
         {
-            return false; // TODO
+            if (!fd || buffer.empty()) return false;
+        
+            size_t totalSent = 0;
+            while (totalSent < buffer.size())
+            {
+                ssize_t sent = ::send
+                (
+                    fd,
+                    buffer.data() + totalSent,
+                    buffer.size() - totalSent,
+                    0
+                );
+                
+                if (sent <= 0)
+                {
+                    close();
+                    return false;
+                }
+                totalSent += static_cast<size_t>(sent);
+            }
+            return true;
         }
 
         bool connect(uint32_t ip, uint16_t port) override
