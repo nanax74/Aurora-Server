@@ -6,7 +6,7 @@
 #include <string>
 #include <format>
 
-namespace Aurora::Sys::Debug
+namespace Debug
 {
     class Logger
     {

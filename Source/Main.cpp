@@ -7,9 +7,9 @@
 
 // this
 #include "Core.hpp"
-#include "Sys/Exception/Patch.hpp"
-#include "Sys/Debug/Logger.hpp"
-#include "Sys/Debug/Notification.hpp"
+#include "Exception/Patch.hpp"
+#include "Debug/Logger.hpp"
+#include "Debug/Notification.hpp"
 
 WUPS_PLUGIN_NAME("Aurora");
 WUPS_PLUGIN_DESCRIPTION("Enables WiiU control using commands");
@@ -22,20 +22,22 @@ WUPS_USE_STORAGE("Aurora"); // ON_APPLICATION_REQUESTS_EXITに必要
 
 INITIALIZE_PLUGIN()
 {
-    Aurora::Sys::Debug::Notification::init();
-    Aurora::Sys::Exception::SetExceptionCallbacks();
+    Debug::Notification::init();
+    Exception::Patch::apply();
 }
+
+std::unique_ptr<Core> gCore;
 
 ON_APPLICATION_START()
 {
-    Aurora::Sys::Debug::Logger::init();
-
-    Aurora::Core::run();
+    Debug::Logger::init();
+    gCore = std::make_unique<Core>();
+    gCore->run();
 }
 
 ON_APPLICATION_REQUESTS_EXIT()
 {
-    Aurora::Core::stop();
-
-    Aurora::Sys::Debug::Logger::shutdown();
+    gCore->stop();
+    gCore.reset();
+    Debug::Logger::shutdown();
 }

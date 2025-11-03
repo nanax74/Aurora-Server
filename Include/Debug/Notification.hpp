@@ -8,7 +8,7 @@
 #include <format>
 #include <utility>
 
-namespace Aurora::Sys::Debug
+namespace Debug
 {
     class Notification
     {
