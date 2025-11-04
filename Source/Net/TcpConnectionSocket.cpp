@@ -27,22 +27,28 @@ namespace Net
         return false;
     }
 
-    std::vector<std::byte> TcpConnectionSocket::receive()
+    std::optional<int> TcpConnectionSocket::getReceivable()
+    {
+        int receivable = 0;
+        int res = ioctl(fd, FIONREAD, &receivable);
+        if(res == -1) return std::nullopt;
+        return res;
+    }
+
+    std::optional<std::vector<std::byte>> TcpConnectionSocket::receive()
     {
         if (!fd) return {};
     
-        int available = 0;
-        int res = ioctl(fd, FIONREAD, &available);
-        if(res == -1) return {};
+        auto receivable = getReceivable();
+        if(!receivable || receivable <= 0) return {};
+        Debug::Logger::printf("getReceivable res:{}", receivable.value());
 
-        std::vector<std::byte> buffer = std::vector<std::byte>(available);
-        res = ::recv(fd, buffer.data(), buffer.size(), 0);
-        if (res <= 0)
-        {
-            return {};
-        }
+        std::vector<std::byte> buffer = std::vector<std::byte>(receivable.value());
+        int received = ::recv(fd, buffer.data(), buffer.size(), 0);
+        Debug::Logger::printf("recv res:{}", received);
+        if (received <= 0) { return {}; }
         
-        buffer.resize((res));
+        buffer.resize((received));
         return buffer;
     }
 
@@ -53,8 +59,8 @@ namespace Net
 
     void TcpConnectionSocket::onReadable()
     {
-        std::vector<std::byte> received = receive();
-        std::string hex = Util::Convert::toHexString(received);
+        auto received = receive();
+        std::string hex = Util::Convert::toHexString(received.value());
         Debug::Logger::printf("Received from: ({}:{}) data: ({})", ip, port, hex);
     }
 

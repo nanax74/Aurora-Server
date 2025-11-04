@@ -30,6 +30,7 @@ namespace Net
     void Server::stop()
     {
         isRunning = false;
+        listener.reset();
         if (acceptThread.joinable())
         {
             acceptThread.join();

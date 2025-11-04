@@ -12,7 +12,7 @@ namespace Net
     class PollManager
     {
     private:
-        static constexpr int POLL_TIMEOUT = 1000;
+        static constexpr int POLL_TIMEOUT = 1000 / 144; // 144Hz
 
         std::vector<struct pollfd> pollfds;
         std::unordered_map<int, IConnectionSocket*> socketMap;

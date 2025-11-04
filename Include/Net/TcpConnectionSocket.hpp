@@ -25,7 +25,8 @@ namespace Net
         static std::unique_ptr<TcpConnectionSocket> create(int fd, std::string ip, uint16_t port);
 
         bool send(const std::vector<std::byte>& data) override;
-        std::vector<std::byte> receive() override;
+        std::optional<int> getReceivable() override;
+        std::optional<std::vector<std::byte>> receive() override;
         int getFd() override;
 
         void onReadable() override;

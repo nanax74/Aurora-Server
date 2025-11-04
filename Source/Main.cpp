@@ -31,8 +31,10 @@ std::unique_ptr<Net::Server> gServer;
 ON_APPLICATION_START()
 {
     Debug::Logger::init();
+    Debug::Logger::printf("Aurora is initializing");
     gServer = std::make_unique<Net::Server>(55555);
     gServer->start();
+    Debug::Logger::printf("Server started on port 55555");
 }
 
 ON_APPLICATION_REQUESTS_EXIT()

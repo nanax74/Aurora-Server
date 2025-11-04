@@ -57,8 +57,6 @@ namespace Net
 
         std::string ip = Util::Convert::ipToString(addr.sin_addr.s_addr);
         uint16_t port = ntohs(addr.sin_port);
-        
-        Debug::Logger::printf("Accepted connection from {}:{}", ip, port);
 
         return TcpConnectionSocket::create(clientFd, ip, port);
     }

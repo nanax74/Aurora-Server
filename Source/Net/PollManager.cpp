@@ -1,5 +1,7 @@
 #include "Net/PollManager.hpp"
+#include "Debug/Logger.hpp"
 #include "Net/IConnectionSocket.hpp"
+#include "poll.h"
 
 #include <thread>
 #include <unistd.h>
@@ -40,11 +42,19 @@ namespace Net
     {
         while (running)
         {
+            Debug::Logger::printf("poll() count:{}", pollfds.size());
+            if (pollfds.empty())
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(POLL_TIMEOUT));
+                continue;
+            }
             int ret = poll(pollfds.data(), pollfds.size(), POLL_TIMEOUT);
-
+            Debug::Logger::printf("poll ret:{}", ret);
             if (ret < 0)
             {
+                Debug::Logger::printf("poll errno:{}", errno);
                 if (errno == EINTR) continue;
+                Debug::Logger::printf("poll break");
                 break;
             }
 
@@ -69,12 +79,22 @@ namespace Net
 
             if (p.revents & (POLLERR | POLLHUP | POLLNVAL))
             {
-                sock->onDisconnected();
                 socketsToUnregister.push_back(sock);
             }
             else
             {
-                if (p.revents & POLLIN) sock->onReadable();
+                if (p.revents & POLLIN)
+                {
+                    auto receivable = sock->getReceivable();
+                    if (!receivable || receivable <= 0)
+                    {
+                        socketsToUnregister.push_back(sock);
+                    }
+                    else
+                    {
+                        sock->onReadable();
+                    }
+                }
                 if (p.revents & POLLOUT) sock->onWritable();
             }
         }
@@ -82,6 +102,7 @@ namespace Net
         for (IConnectionSocket* sock : socketsToUnregister)
         {
             unregisterSocket(sock);
+            sock->onDisconnected();   // ←ここでclose()してOK
         }
     }
 }
