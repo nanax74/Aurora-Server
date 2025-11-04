@@ -2,9 +2,9 @@
 
 #include <memory>
 
-#include "Net/Server/IConnectionSocket.hpp"
+#include "Net/IConnectionSocket.hpp"
 
-namespace Server
+namespace Net
 {
     class IListenerSocket
     {

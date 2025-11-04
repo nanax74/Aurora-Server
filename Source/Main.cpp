@@ -6,7 +6,7 @@
 #include <coreinit/debug.h>
 
 // this
-#include "Core.hpp"
+#include "Net/Server.hpp"
 #include "Exception/Patch.hpp"
 #include "Debug/Logger.hpp"
 #include "Debug/Notification.hpp"
@@ -26,18 +26,17 @@ INITIALIZE_PLUGIN()
     Exception::Patch::apply();
 }
 
-std::unique_ptr<Core> gCore;
+std::unique_ptr<Net::Server> gServer;
 
 ON_APPLICATION_START()
 {
     Debug::Logger::init();
-    gCore = std::make_unique<Core>();
-    gCore->run();
+    gServer = std::make_unique<Net::Server>(55555);
+    gServer->start();
 }
 
 ON_APPLICATION_REQUESTS_EXIT()
 {
-    gCore->stop();
-    gCore.reset();
+    gServer.reset();
     Debug::Logger::shutdown();
 }

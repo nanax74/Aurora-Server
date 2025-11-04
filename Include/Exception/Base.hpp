@@ -12,7 +12,6 @@ namespace Exception
     {
     public:
         virtual std::string name() = 0;
-        virtual OSExceptionType type() = 0;
 
         virtual void panic(std::string name, OSContext* context);
         virtual bool handle(OSContext* context);

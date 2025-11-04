@@ -3,9 +3,9 @@
 #include <memory>
 #include <optional>
 
-#include "Net/Server/IListenerSocket.hpp"
+#include "Net/IListenerSocket.hpp"
 
-namespace Server
+namespace Net
 {
     class TcpListenerSocket : public IListenerSocket
     {

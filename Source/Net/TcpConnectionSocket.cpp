@@ -6,14 +6,19 @@
 #include <unistd.h>
 #include <vector>
 
-#include "Net/Server/TcpConnectionSocket.hpp"
+#include "Debug/Logger.hpp"
+#include "Net/TcpConnectionSocket.hpp"
+#include "Net/Util/Convert.hpp"
 
-namespace Server
+namespace Net
 {
+    TcpConnectionSocket::~TcpConnectionSocket() { close(fd); }
+
     TcpConnectionSocket::TcpConnectionSocket(int fd, std::string ip, uint16_t port) : fd(fd), ip(ip), port(port) {}
 
     std::unique_ptr<TcpConnectionSocket> TcpConnectionSocket::create(int fd, std::string ip, uint16_t port)
     {
+        Debug::Logger::printf("Connected to: ({}:{})", ip, port);
         return std::unique_ptr<TcpConnectionSocket>(new TcpConnectionSocket(fd, ip, port));
     }
 
@@ -39,5 +44,28 @@ namespace Server
         
         buffer.resize((res));
         return buffer;
+    }
+
+    int TcpConnectionSocket::getFd()
+    {
+        return fd;
+    }
+
+    void TcpConnectionSocket::onReadable()
+    {
+        std::vector<std::byte> received = receive();
+        std::string hex = Util::Convert::toHexString(received);
+        Debug::Logger::printf("Received from: ({}:{}) data: ({})", ip, port, hex);
+    }
+
+    void TcpConnectionSocket::onWritable()
+    {
+        
+    }
+
+    void TcpConnectionSocket::onDisconnected()
+    {
+        close(fd);
+        Debug::Logger::printf("Disconnected from: ({}:{})", ip, port);
     }
 }

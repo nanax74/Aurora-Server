@@ -5,13 +5,21 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
-#include "Net/Server/TcpListenerSocket.hpp"
-#include "Net/Server/TcpConnectionSocket.hpp"
-#include "Net/Convert.hpp"
+#include "Debug/Logger.hpp"
+#include "Net/TcpListenerSocket.hpp"
+#include "Net/TcpConnectionSocket.hpp"
+#include "Net/Util/Convert.hpp"
 
-namespace Server
+namespace Net
 {
     TcpListenerSocket::TcpListenerSocket(int fd) : fd(fd) {}
+
+    TcpListenerSocket::~TcpListenerSocket()
+    {
+        if (fd.has_value()) {
+            close(fd.value());
+        }
+    }
 
     std::unique_ptr<TcpListenerSocket> TcpListenerSocket::create(uint16_t port)
     {
@@ -47,9 +55,11 @@ namespace Server
         int clientFd = ::accept(fd.value(), (sockaddr*)&addr, &addrlen);
         if(clientFd == -1) return nullptr;
 
-        std::string ip = Convert::ipToString(addr.sin_addr.s_addr);
+        std::string ip = Util::Convert::ipToString(addr.sin_addr.s_addr);
         uint16_t port = ntohs(addr.sin_port);
         
+        Debug::Logger::printf("Accepted connection from {}:{}", ip, port);
+
         return TcpConnectionSocket::create(clientFd, ip, port);
     }
 }

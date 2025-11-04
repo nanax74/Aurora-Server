@@ -4,13 +4,15 @@
 #include <cstdint>
 #include <memory>
 
-#include "Net/Server/IConnectionSocket.hpp"
+#include "Net/IConnectionSocket.hpp"
 
-namespace Server
+namespace Net
 {
     class TcpConnectionSocket : public IConnectionSocket
     {
     private:
+        friend class PollManager;
+
         int fd;
         std::string ip;
         uint16_t port;
@@ -24,5 +26,10 @@ namespace Server
 
         bool send(const std::vector<std::byte>& data) override;
         std::vector<std::byte> receive() override;
+        int getFd() override;
+
+        void onReadable() override;
+        void onWritable() override;
+        void onDisconnected() override;
     };
 }

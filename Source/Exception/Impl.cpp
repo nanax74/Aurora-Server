@@ -1,5 +1,3 @@
-#pragma once
-
 #include <format>
 
 #include "Exception/Impl.hpp"
