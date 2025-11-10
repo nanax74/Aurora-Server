@@ -3,6 +3,7 @@
 #include <chrono>
 
 #include "Net/Transport/Server.hpp"
+#include "Debug/Logger.hpp"
 #include "Net/Protocol/InvalidData.hpp"
 #include "Net/Transport/Connection.hpp"
 #include "Net/Transport/IConnectionSocket.hpp"
@@ -75,6 +76,9 @@ namespace Net::Transport
         }
 
         Protocol::ID id = *reinterpret_cast<const Protocol::ID*>(data.data());
+    
+        Debug::Logger::printf("ID:{}", static_cast<int>(id));
+
         std::vector<std::byte> payload(data.begin() + sizeof(Protocol::ID), data.end());
         std::unique_ptr<Protocol::IData> protocolData(registry->create(id, payload));
         dispatcher(registry, std::move(connection), std::move(protocolData));

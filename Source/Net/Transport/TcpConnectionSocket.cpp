@@ -14,9 +14,9 @@ namespace Net::Transport
 {
     TcpConnectionSocket::~TcpConnectionSocket() { close(fd); }
 
-    TcpConnectionSocket::TcpConnectionSocket(int fd, std::string ip, uint16_t port, std::function<void(std::unique_ptr<IConnectionSocket>, std::vector<std::byte>)> onReceive) : fd(fd), ip(ip), port(port), onReceive(onReceive) {}
+    TcpConnectionSocket::TcpConnectionSocket(int fd, std::string ip, uint16_t port, std::function<void(std::shared_ptr<IConnectionSocket>, std::vector<std::byte>)> onReceive) : fd(fd), ip(ip), port(port), onReceive(onReceive) {}
 
-    std::unique_ptr<TcpConnectionSocket> TcpConnectionSocket::create(int fd, std::string ip, uint16_t port, std::function<void(std::unique_ptr<IConnectionSocket>, std::vector<std::byte>)> onReceive)
+    std::unique_ptr<TcpConnectionSocket> TcpConnectionSocket::create(int fd, std::string ip, uint16_t port, std::function<void(std::shared_ptr<IConnectionSocket>, std::vector<std::byte>)> onReceive)
     {
         Debug::Logger::printf("Connected to: ({}:{})", ip, port);
         return std::unique_ptr<TcpConnectionSocket>(new TcpConnectionSocket(fd, ip, port, onReceive));
@@ -53,13 +53,12 @@ namespace Net::Transport
     {
         auto received = receive();
         if(!received) return false;
-        if(onReceive) onReceive(std::unique_ptr<IConnectionSocket>(this), received.value());
+        if(onReceive) onReceive(shared_from_this(), received.value());
         return true;
     }
 
     void TcpConnectionSocket::onDisconnected()
     {
-        close(fd);
         Debug::Logger::printf("Disconnected from: ({}:{})", ip, port);
     }
 }
