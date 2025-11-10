@@ -3,9 +3,9 @@
 #include <memory>
 #include <optional>
 
-#include "Net/IListenerSocket.hpp"
+#include "Net/Transport/IListenerSocket.hpp"
 
-namespace Net
+namespace Net::Transport
 {
     class TcpListenerSocket : public IListenerSocket
     {
@@ -18,6 +18,6 @@ namespace Net
 
         static std::unique_ptr<TcpListenerSocket> create(uint16_t port);
 
-        std::unique_ptr<IConnectionSocket> accept() override;
+        std::shared_ptr<IConnectionSocket> accept(std::function<void(std::shared_ptr<IConnectionSocket>, std::vector<std::byte>)> onReceive) override;
     };
 }

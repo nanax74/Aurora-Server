@@ -6,7 +6,8 @@
 #include <coreinit/debug.h>
 
 // this
-#include "Net/Server.hpp"
+#include "Net/Protocol/Processor.hpp"
+#include "Net/Transport/Server.hpp"
 #include "Exception/Patch.hpp"
 #include "Debug/Logger.hpp"
 #include "Debug/Notification.hpp"
@@ -26,13 +27,12 @@ INITIALIZE_PLUGIN()
     Exception::Patch::apply();
 }
 
-std::unique_ptr<Net::Server> gServer;
+std::unique_ptr<Net::Transport::Server> gServer;
 
 ON_APPLICATION_START()
 {
     Debug::Logger::init();
-    Debug::Logger::printf("Aurora is initializing");
-    gServer = std::make_unique<Net::Server>(55555);
+    gServer = std::make_unique<Net::Transport::Server>(55555, &Net::Protocol::Processor::dispatch);
     gServer->start();
     Debug::Logger::printf("Server started on port 55555");
 }

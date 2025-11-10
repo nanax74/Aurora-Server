@@ -6,7 +6,7 @@ TARGET		:=	Aurora-Server
 BUILD		:=	Build
 SOURCES		:=	Source
 DATA		:=	
-INCLUDES	:=	Include
+INCLUDES	:=	Include ../Include/Protocol
 
 include $(TOPDIR)/Rules/Flags.mk
 

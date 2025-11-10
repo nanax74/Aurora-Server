@@ -2,15 +2,15 @@
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 
-#include "Debug/Logger.hpp"
-#include "Net/TcpListenerSocket.hpp"
-#include "Net/TcpConnectionSocket.hpp"
+#include "Net/Transport/TcpListenerSocket.hpp"
+#include "Net/Transport/TcpConnectionSocket.hpp"
 #include "Net/Util/Convert.hpp"
 
-namespace Net
+namespace Net::Transport
 {
     TcpListenerSocket::TcpListenerSocket(int fd) : fd(fd) {}
 
@@ -26,11 +26,19 @@ namespace Net
         int fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         if(fd == -1) return nullptr;
 
+        int opt = 1;
+        int res = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &opt, sizeof(opt));
+        if(res < 0)
+        {
+            close(fd);
+            return nullptr;
+        }
+
         struct sockaddr_in addr{};
         addr.sin_family = AF_INET;
         addr.sin_port = htons(port);
         addr.sin_addr.s_addr = INADDR_ANY;
-        int res = bind(fd, (sockaddr*)&addr, sizeof(addr));
+        res = bind(fd, (sockaddr*)&addr, sizeof(addr));
         if(res == -1)
         {
             close(fd);
@@ -47,7 +55,7 @@ namespace Net
         return std::unique_ptr<TcpListenerSocket>(new TcpListenerSocket(fd));
     }
 
-    std::unique_ptr<IConnectionSocket> TcpListenerSocket::accept()
+    std::shared_ptr<IConnectionSocket> TcpListenerSocket::accept(std::function<void(std::shared_ptr<IConnectionSocket>, std::vector<std::byte>)> process)
     {
         sockaddr_in addr;
         socklen_t addrlen = sizeof(addr);
@@ -58,6 +66,6 @@ namespace Net
         std::string ip = Util::Convert::ipToString(addr.sin_addr.s_addr);
         uint16_t port = ntohs(addr.sin_port);
 
-        return TcpConnectionSocket::create(clientFd, ip, port);
+        return TcpConnectionSocket::create(clientFd, ip, port, process);
     }
 }

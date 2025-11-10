@@ -1,60 +1,58 @@
-#include "Net/PollManager.hpp"
+#include "Net/Transport/SocketPoller.hpp"
 #include "Debug/Logger.hpp"
-#include "Net/IConnectionSocket.hpp"
+#include "Net/Transport/IConnectionSocket.hpp"
 #include "poll.h"
 
 #include <thread>
 #include <unistd.h>
 #include <algorithm>
+#include <memory>
 
-namespace Net
+namespace Net::Transport
 {
-    void PollManager::registerSocket(IConnectionSocket* socket)
+    void SocketPoller::registerSocket(std::shared_ptr<IConnectionSocket> connection)
     {
         struct pollfd pfd{};
-        pfd.fd = socket->getFd();
-        pfd.events = POLLIN | POLLOUT;
+        pfd.fd = connection->getFd();
+        pfd.events = POLLIN;
         pollfds.push_back(pfd);
-        socketMap[pfd.fd] = socket;
+        socketMap[pfd.fd] = connection;
     }
 
-    void PollManager::unregisterSocket(IConnectionSocket* socket)
+    void SocketPoller::unregisterSocket(std::shared_ptr<IConnectionSocket> connection)
     {
-        int fd = socket->getFd();
+        int fd = connection->getFd();
         pollfds.erase(std::remove_if(pollfds.begin(), pollfds.end(),
             [fd](auto& p) { return p.fd == fd; }), pollfds.end());
         socketMap.erase(fd);
     }
 
-    void PollManager::run()
+    void SocketPoller::run()
     {
         running = true;
-        thread = std::thread(&PollManager::worker, this);
+        thread = std::thread(&SocketPoller::worker, this);
     }
 
-    void PollManager::stop()
+    void SocketPoller::stop()
     {
         running = false;
         if (thread.joinable()) thread.join();
     }
 
-    void PollManager::worker()
+    void SocketPoller::worker()
     {
         while (running)
         {
-            Debug::Logger::printf("poll() count:{}", pollfds.size());
             if (pollfds.empty())
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(POLL_TIMEOUT));
                 continue;
             }
             int ret = poll(pollfds.data(), pollfds.size(), POLL_TIMEOUT);
-            Debug::Logger::printf("poll ret:{}", ret);
             if (ret < 0)
             {
                 Debug::Logger::printf("poll errno:{}", errno);
                 if (errno == EINTR) continue;
-                Debug::Logger::printf("poll break");
                 break;
             }
 
@@ -64,9 +62,9 @@ namespace Net
         }
     }
 
-    void PollManager::processEvents()
+    void SocketPoller::processEvents()
     {
-        std::vector<IConnectionSocket*> socketsToUnregister;
+        std::vector<std::shared_ptr<IConnectionSocket>> socketsToUnregister;
 
         for (auto& p : pollfds)
         {
@@ -75,34 +73,26 @@ namespace Net
             auto it = socketMap.find(p.fd);
             if (it == socketMap.end()) continue;
 
-            IConnectionSocket* sock = it->second;
+            std::shared_ptr<IConnectionSocket> sock = it->second;
 
             if (p.revents & (POLLERR | POLLHUP | POLLNVAL))
             {
                 socketsToUnregister.push_back(sock);
             }
-            else
+            else if(p.revents & POLLIN)
             {
-                if (p.revents & POLLIN)
+                bool res = sock->onReceivable();
+                if(!res)
                 {
-                    auto receivable = sock->getReceivable();
-                    if (!receivable || receivable <= 0)
-                    {
-                        socketsToUnregister.push_back(sock);
-                    }
-                    else
-                    {
-                        sock->onReadable();
-                    }
+                    socketsToUnregister.push_back(sock);
                 }
-                if (p.revents & POLLOUT) sock->onWritable();
             }
         }
 
-        for (IConnectionSocket* sock : socketsToUnregister)
+        for (std::shared_ptr<IConnectionSocket> sock : socketsToUnregister)
         {
             unregisterSocket(sock);
-            sock->onDisconnected();   // ←ここでclose()してOK
+            sock->onDisconnected();
         }
     }
 }
