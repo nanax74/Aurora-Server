@@ -1,20 +1,26 @@
+#include <memory>
 #include <stdexcept>
 #include <chrono>
 
 #include "Net/Transport/Server.hpp"
+#include "Net/Protocol/InvalidData.hpp"
 #include "Net/Transport/Connection.hpp"
 #include "Net/Transport/IConnectionSocket.hpp"
 #include "Net/Protocol/IData.hpp"
+#include "Net/Protocol/Registry.hpp"
+#include "Net/Protocol/ID.hpp"
+#include "Net/Protocol/Processor.hpp"
 
 namespace Net::Transport
 {
-    Server::Server(uint16_t port, std::function<void(std::unique_ptr<Connection>, std::unique_ptr<Protocol::IData>)> dispatcher) : dispatcher(dispatcher)
+    Server::Server(uint16_t port, std::function<void(std::shared_ptr<Protocol::Registry>, std::unique_ptr<Connection>, std::unique_ptr<Protocol::IData>)> dispatcher) : registry(std::shared_ptr<Protocol::Registry>(new Protocol::Registry())), dispatcher(dispatcher)
     {
         listener = TcpListenerSocket::create(port);
         if (!listener)
         {
             throw std::runtime_error("Failed to create listener socket");
         }
+        Protocol::Processor::registerData(registry);
     }
 
     Server::~Server()
@@ -58,6 +64,19 @@ namespace Net::Transport
 
     void Server::onReceive(std::shared_ptr<IConnectionSocket> socket, std::vector<std::byte> data)
     {
-        std::unique_ptr<Connection> connection(new Connection(socket));
+        if (!dispatcher) return;
+
+        auto connection = std::make_unique<Connection>(socket);
+
+        if (data.size() < sizeof(Protocol::ID))
+        {
+            dispatcher(registry, std::move(connection), std::make_unique<Protocol::InvalidData>());
+            return;
+        }
+
+        Protocol::ID id = *reinterpret_cast<const Protocol::ID*>(data.data());
+        std::vector<std::byte> payload(data.begin() + sizeof(Protocol::ID), data.end());
+        std::unique_ptr<Protocol::IData> protocolData(registry->create(id, payload));
+        dispatcher(registry, std::move(connection), std::move(protocolData));
     }
 }

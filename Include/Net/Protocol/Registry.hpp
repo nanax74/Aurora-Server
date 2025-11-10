@@ -4,16 +4,17 @@
 
 #include <map>
 #include <functional>
+#include <memory>
 
 namespace Net::Protocol
 {
     class Registry
     {
     private:
-        std::map<int, std::function<IData*()>> factories;
+        std::map<ID, std::function<std::unique_ptr<IData>(std::vector<std::byte> data)>> factories;
     public:
-        void registerFactory(int id, std::function<IData*()> factory);
+        void registerFactory(ID id, std::function<std::unique_ptr<IData>(std::vector<std::byte> data)> factory);
 
-        IData* create(int id);
+        std::unique_ptr<IData> create(ID id, std::vector<std::byte> data);
     };
 }

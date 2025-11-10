@@ -6,4 +6,9 @@ namespace Net::Protocol
     {
         return ID::Invalid;
     }
+
+    std::vector<std::byte> InvalidData::serialize()
+    {
+        return {};
+    }
 }

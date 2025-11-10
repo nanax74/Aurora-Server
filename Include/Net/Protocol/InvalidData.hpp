@@ -8,5 +8,6 @@ namespace Net::Protocol
     {
     public:
         ID getId() override;
+        std::vector<std::byte> serialize() override;
     };
 }

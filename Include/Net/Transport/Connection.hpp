@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "Net/Transport/IConnectionSocket.hpp"
+#include "Net/Protocol/IData.hpp"
 
 namespace Net::Transport
 {
@@ -13,5 +14,6 @@ namespace Net::Transport
 
     public:
         explicit Connection(std::shared_ptr<IConnectionSocket> socket);
+        void send(std::unique_ptr<Protocol::IData> data);
     };
 }

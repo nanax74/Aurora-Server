@@ -5,6 +5,7 @@
 #include <thread>
 
 #include "Net/Protocol/IData.hpp"
+#include "Net/Protocol/Registry.hpp"
 #include "Net/Transport/Connection.hpp"
 #include "Net/Transport/SocketPoller.hpp"
 #include "Net/Transport/TcpListenerSocket.hpp"
@@ -21,12 +22,13 @@ namespace Net::Transport
 		std::thread acceptThread;
 		bool isRunning = false;
 
-		std::function<void(std::unique_ptr<Connection>, std::unique_ptr<Protocol::IData>)> dispatcher;
+		std::shared_ptr<Protocol::Registry> registry;
+		std::function<void(std::shared_ptr<Protocol::Registry>, std::unique_ptr<Connection>, std::unique_ptr<Protocol::IData>)> dispatcher;
 
 		void acceptLoop();
 
 	public:
-		Server(uint16_t port, std::function<void(std::unique_ptr<Connection>, std::unique_ptr<Protocol::IData>)> dispatcher = nullptr);
+		Server(uint16_t port, std::function<void(std::shared_ptr<Protocol::Registry>, std::unique_ptr<Connection>, std::unique_ptr<Protocol::IData>)> dispatcher = nullptr);
 		~Server();
 
 		void start();
