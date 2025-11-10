@@ -14,6 +14,7 @@ private:
 
 public:
     const std::vector<std::byte>& data() const { return buffer; }
+    std::vector<std::byte> copy() const { return buffer; }
 
     void clear() { buffer.clear(); }
 

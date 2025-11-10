@@ -19,8 +19,10 @@ namespace Net::Transport
         listener = TcpListenerSocket::create(port);
         if (!listener)
         {
+            Debug::Logger::printf("Failed to create listener socket on port {}", port);
             throw std::runtime_error("Failed to create listener socket");
         }
+        Debug::Logger::printf("Listener socket created on port {}", port);
         Protocol::Processor::registerData(registry);
     }
 
@@ -31,9 +33,11 @@ namespace Net::Transport
 
     void Server::start()
     {
+        Debug::Logger::printf("Server starting...");
         isRunning = true;
         poller.run();
         acceptThread = std::thread(&Server::acceptLoop, this);
+        Debug::Logger::printf("Server started.");
     }
 
     void Server::stop()
@@ -51,10 +55,13 @@ namespace Net::Transport
     {
         while (isRunning)
         {
+            Debug::Logger::printf("Waiting for new connection...");
             std::shared_ptr<IConnectionSocket> connection = listener->accept([this](std::shared_ptr<IConnectionSocket> socket, std::vector<std::byte> data){ onReceive(socket, data); });
             if (connection)
             {
+                Debug::Logger::printf("New connection accepted. Registering with poller.");
                 poller.registerSocket(connection);
+                Debug::Logger::printf("Connection registered with poller.");
             }
             else
             {
@@ -65,22 +72,25 @@ namespace Net::Transport
 
     void Server::onReceive(std::shared_ptr<IConnectionSocket> socket, std::vector<std::byte> data)
     {
+        Debug::Logger::printf("Received data from socket. Data size: {}", data.size());
         if (!dispatcher) return;
 
         auto connection = std::make_unique<Connection>(socket);
 
         if (data.size() < sizeof(Protocol::ID))
         {
+            Debug::Logger::printf("Received data size ({}) is less than Protocol::ID size ({}). Dispatching InvalidData.", data.size(), sizeof(Protocol::ID));
             dispatcher(registry, std::move(connection), std::make_unique<Protocol::InvalidData>());
             return;
         }
 
         Protocol::ID id = *reinterpret_cast<const Protocol::ID*>(data.data());
-    
-        Debug::Logger::printf("ID:{}", static_cast<int>(id));
+        Debug::Logger::printf("Extracted Protocol::ID: {}", static_cast<uint32_t>(id));
 
         std::vector<std::byte> payload(data.begin() + sizeof(Protocol::ID), data.end());
+        Debug::Logger::printf("Creating IData from payload with size: {}", payload.size());
         std::unique_ptr<Protocol::IData> protocolData(registry->create(id, payload));
+        Debug::Logger::printf("Dispatching data for Protocol::ID: {}", static_cast<uint32_t>(id));
         dispatcher(registry, std::move(connection), std::move(protocolData));
     }
 }

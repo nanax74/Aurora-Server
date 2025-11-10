@@ -49,6 +49,6 @@ clean:
 	@echo clean ...
 	@rm -fr $(BUILD) $(TARGET).wps $(TARGET).elf
 
-send:
+send: $(BUILD)
 	@$(TOPDIR)/send.sh $(TARGET).wps
 	@udplogserver

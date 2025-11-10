@@ -11,8 +11,7 @@ public:
     template<typename T>
     T read()
     {
-        if (pos + sizeof(T) > data.size())
-            throw std::out_of_range("ByteReader: out of range");
+        if (pos + sizeof(T) > data.size()) throw std::out_of_range("ByteReader: out of range");
 
         T value;
         std::memcpy(&value, data.data() + pos, sizeof(T));

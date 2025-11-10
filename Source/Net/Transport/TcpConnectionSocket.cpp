@@ -24,7 +24,7 @@ namespace Net::Transport
 
     bool TcpConnectionSocket::send(const std::vector<std::byte>& data)
     {
-        return false;
+        return ::send(fd, (const char*)data.data(), data.size(), 0) > 0;
     }
 
     std::optional<std::vector<std::byte>> TcpConnectionSocket::receive()
@@ -42,7 +42,6 @@ namespace Net::Transport
         buffer.resize(received);
         return buffer;
     }
-
 
     int TcpConnectionSocket::getFd()
     {

@@ -27,6 +27,6 @@ namespace Net::Protocol::Entry
         ByteWriter writer;
 
         writer.writeString(msg);
-        return writer.data();
+        return writer.copy();
     }
 }
