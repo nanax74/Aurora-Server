@@ -73,14 +73,12 @@ namespace Net::Transport
     void Server::onReceive(std::shared_ptr<IConnectionSocket> socket, std::vector<std::byte> data)
     {
         Debug::Logger::printf("Received data from socket. Data size: {}", data.size());
-        if (!dispatcher) return;
 
         auto connection = std::make_unique<Connection>(socket);
 
         if (data.size() < sizeof(Protocol::ID))
         {
             Debug::Logger::printf("Received data size ({}) is less than Protocol::ID size ({}). Dispatching InvalidData.", data.size(), sizeof(Protocol::ID));
-            dispatcher(registry, std::move(connection), std::make_unique<Protocol::InvalidData>());
             return;
         }
 
@@ -89,8 +87,8 @@ namespace Net::Transport
 
         std::vector<std::byte> payload(data.begin() + sizeof(Protocol::ID), data.end());
         Debug::Logger::printf("Creating IData from payload with size: {}", payload.size());
-        std::unique_ptr<Protocol::IData> protocolData(registry->create(id, payload));
+        std::unique_ptr<Protocol::IData> protocolData(registry->deserialize(id, payload));
         Debug::Logger::printf("Dispatching data for Protocol::ID: {}", static_cast<uint32_t>(id));
-        dispatcher(registry, std::move(connection), std::move(protocolData));
+        protocolData->process(std::move(connection));
     }
 }

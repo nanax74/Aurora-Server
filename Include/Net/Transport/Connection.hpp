@@ -3,17 +3,24 @@
 #include <memory>
 
 #include "Net/Transport/IConnectionSocket.hpp"
-#include "Net/Protocol/IData.hpp"
 
-namespace Net::Transport
+namespace Net
 {
-    class Connection
+    namespace Protocol
     {
-    private:
-        std::shared_ptr<IConnectionSocket> socket;
+        class IData;
+    }
 
-    public:
-        explicit Connection(std::shared_ptr<IConnectionSocket> socket);
-        void send(std::unique_ptr<Protocol::IData> data);
-    };
+    namespace Transport
+    {
+        class Connection
+        {
+        private:
+            std::shared_ptr<IConnectionSocket> socket;
+        
+        public:
+            explicit Connection(std::shared_ptr<IConnectionSocket> socket);
+            void send(std::unique_ptr<Protocol::IData> data);
+        };
+    }
 }

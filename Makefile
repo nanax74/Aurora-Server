@@ -4,9 +4,9 @@ include $(TOPDIR)/Rules/Setup.mk
 
 TARGET		:=	Aurora-Server
 BUILD		:=	Build
-SOURCES		:=	Source
+SOURCES		:=	Source ../Common/Source
 DATA		:=	
-INCLUDES	:=	Include ../Include/Protocol
+INCLUDES	:=	Include ../Common/Include
 
 include $(TOPDIR)/Rules/Flags.mk
 

@@ -13,4 +13,4 @@
 -ID:/devkitPro/devkitPPC/powerpc-eabi/include/c++/15.1.0/powerpc-eabi
 -ID:/devkitPro/devkitPPC/powerpc-eabi/include
 
--I../Include/Protocol
+-I../Common/Include

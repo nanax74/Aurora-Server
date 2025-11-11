@@ -1,4 +1,5 @@
 #include "Net/Transport/Connection.hpp"
+#include "Net/Protocol/IData.hpp"
 
 namespace Net::Transport
 {
