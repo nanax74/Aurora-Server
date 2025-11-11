@@ -8,5 +8,3 @@ include $(DEVKITPRO)/wups/share/wups_rules
 
 WUT_ROOT := $(DEVKITPRO)/wut
 WUMS_ROOT := $(DEVKITPRO)/wums
-
-BOOST_ROOT := $(DEVKITPRO)/boost

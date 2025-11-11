@@ -8,7 +8,7 @@
 
 #include "Net/Transport/TcpListenerSocket.hpp"
 #include "Net/Transport/TcpConnectionSocket.hpp"
-#include "Net/Util/IP.hpp"
+#include "Util/IP.hpp"
 
 namespace Net::Transport
 {
@@ -55,7 +55,7 @@ namespace Net::Transport
         return std::unique_ptr<TcpListenerSocket>(new TcpListenerSocket(fd));
     }
 
-    std::shared_ptr<IConnectionSocket> TcpListenerSocket::accept(std::function<void(std::shared_ptr<IConnectionSocket>, std::vector<std::byte>)> process)
+    std::shared_ptr<IConnectionSocket> TcpListenerSocket::accept(std::function<void(std::shared_ptr<IConnectionSocket>, std::vector<std::byte>)> onReceive)
     {
         sockaddr_in addr;
         socklen_t addrlen = sizeof(addr);
@@ -66,6 +66,6 @@ namespace Net::Transport
         std::string ip = Util::IP::ipToString(addr.sin_addr.s_addr);
         uint16_t port = ntohs(addr.sin_port);
 
-        return TcpConnectionSocket::create(clientFd, ip, port, process);
+        return TcpConnectionSocket::create(clientFd, ip, port, onReceive);
     }
 }

@@ -2,11 +2,13 @@
 #include "Net/Transport/Connection.hpp"
 #include "Data/ByteWriter.hpp"
 #include "Data/ByteReader.hpp"
-#include "Debug/Logger.hpp"
 #include <memory>
+#include "Util/Time.hpp"
+#include "Debug/Logger.hpp"
 
 namespace Net::Protocol::Entry
 {
+    Ping::Ping() : timestamp(Util::Time::getNow()) {}
     Ping::Ping(uint64_t timestamp) : timestamp(timestamp) {}
 
     ID Ping::getId()
@@ -25,10 +27,11 @@ namespace Net::Protocol::Entry
     {
         Data::ByteReader reader(data);
         uint64_t timestamp = reader.read<uint64_t>();
+        Debug::Logger::printf("timestamp:{}", timestamp);
         return std::unique_ptr<Ping>(new Ping(timestamp));
     }
 
-    void Ping::process(std::unique_ptr<Transport::Connection> connection)
+    void Ping::process(std::shared_ptr<Transport::Connection> connection)
     {
         std::unique_ptr<Pong> pong(new Pong(timestamp));
         connection->send(std::move(pong));
@@ -55,7 +58,7 @@ namespace Net::Protocol::Entry
         return std::unique_ptr<Pong>(new Pong(timestamp));
     }
 
-    void Pong::process(std::unique_ptr<Transport::Connection> connection)
+    void Pong::process(std::shared_ptr<Transport::Connection> connection)
     {
         Debug::Logger::printf("Pong: {}", timestamp);
     }

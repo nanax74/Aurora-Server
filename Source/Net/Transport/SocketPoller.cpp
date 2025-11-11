@@ -1,7 +1,6 @@
 #include "Net/Transport/SocketPoller.hpp"
 #include "Debug/Logger.hpp"
 #include "Net/Transport/IConnectionSocket.hpp"
-#include "poll.h"
 
 #include <thread>
 #include <unistd.h>

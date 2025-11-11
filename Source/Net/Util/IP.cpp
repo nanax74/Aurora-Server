@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <arpa/inet.h>
 
-#include "Net/Util/IP.hpp"
+#include "Util/IP.hpp"
 
 namespace Net::Util
 {

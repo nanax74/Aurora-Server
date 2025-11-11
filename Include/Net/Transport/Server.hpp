@@ -23,12 +23,11 @@ namespace Net::Transport
 		bool isRunning = false;
 
 		std::shared_ptr<Protocol::Registry> registry;
-		std::function<void(std::shared_ptr<Protocol::Registry>, std::unique_ptr<Connection>, std::unique_ptr<Protocol::IData>)> dispatcher;
 
 		void acceptLoop();
 
 	public:
-		Server(uint16_t port, std::function<void(std::shared_ptr<Protocol::Registry>, std::unique_ptr<Connection>, std::unique_ptr<Protocol::IData>)> dispatcher = nullptr);
+		Server(uint16_t port);
 		~Server();
 
 		void start();

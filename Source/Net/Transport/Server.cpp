@@ -4,17 +4,17 @@
 
 #include "Net/Transport/Server.hpp"
 #include "Debug/Logger.hpp"
-#include "Net/Protocol/InvalidData.hpp"
 #include "Net/Transport/Connection.hpp"
 #include "Net/Transport/IConnectionSocket.hpp"
 #include "Net/Protocol/IData.hpp"
 #include "Net/Protocol/Registry.hpp"
 #include "Net/Protocol/ID.hpp"
 #include "Net/Protocol/Processor.hpp"
+#include "Data/ByteReader.hpp"
 
 namespace Net::Transport
 {
-    Server::Server(uint16_t port, std::function<void(std::shared_ptr<Protocol::Registry>, std::unique_ptr<Connection>, std::unique_ptr<Protocol::IData>)> dispatcher) : registry(std::shared_ptr<Protocol::Registry>(new Protocol::Registry())), dispatcher(dispatcher)
+    Server::Server(uint16_t port) : registry(std::shared_ptr<Protocol::Registry>(new Protocol::Registry()))
     {
         listener = TcpListenerSocket::create(port);
         if (!listener)
@@ -82,10 +82,11 @@ namespace Net::Transport
             return;
         }
 
-        Protocol::ID id = *reinterpret_cast<const Protocol::ID*>(data.data());
+        Data::ByteReader reader(data);
+        Protocol::ID id = static_cast<Protocol::ID>(reader.read<int>());
         Debug::Logger::printf("Extracted Protocol::ID: {}", static_cast<uint32_t>(id));
 
-        std::vector<std::byte> payload(data.begin() + sizeof(Protocol::ID), data.end());
+        std::vector<std::byte> payload(reader.readBytes(reader.remain()));
         Debug::Logger::printf("Creating IData from payload with size: {}", payload.size());
         std::unique_ptr<Protocol::IData> protocolData(registry->deserialize(id, payload));
         Debug::Logger::printf("Dispatching data for Protocol::ID: {}", static_cast<uint32_t>(id));
