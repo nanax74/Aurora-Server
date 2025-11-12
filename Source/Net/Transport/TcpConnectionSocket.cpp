@@ -22,29 +22,17 @@ namespace Net::Transport
         return std::unique_ptr<TcpConnectionSocket>(new TcpConnectionSocket(fd, ip, port, onReceive));
     }
 
-bool TcpConnectionSocket::send(const std::vector<std::byte>& data)
-{
-    int bytesSent = ::send(fd, reinterpret_cast<const char*>(data.data()), data.size(), 0);
-
-    if (bytesSent > 0)
+    bool TcpConnectionSocket::send(const std::vector<std::byte>& data)
     {
-        std::string hexStr;
-        for (size_t i = 0; i < data.size(); ++i)
+        int bytes = ::send(fd, reinterpret_cast<const char*>(data.data()), data.size(), 0);
+    
+        if (bytes <= 0)
         {
-            char buf[4];
-            std::snprintf(buf, sizeof(buf), "%02X ", static_cast<unsigned int>(data[i]));
-            hexStr += buf;
+            Debug::Logger::printf("Failed to send data, returned {}", bytes);
+            return false;
         }
-
-        Debug::Logger::printf("Sent {} bytes: {}", bytesSent, hexStr.c_str());
         return true;
     }
-    else
-    {
-        Debug::Logger::printf("Failed to send data, returned {}", bytesSent);
-        return false;
-    }
-}
 
     std::optional<std::vector<std::byte>> TcpConnectionSocket::receive()
     {

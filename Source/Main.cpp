@@ -34,7 +34,6 @@ ON_APPLICATION_START()
     Debug::Logger::init();
     gServer = std::make_unique<Net::Transport::Server>(55555);
     gServer->start();
-    Debug::Logger::printf("Server started on port 55555");
 }
 
 ON_APPLICATION_REQUESTS_EXIT()
