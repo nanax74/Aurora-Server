@@ -4,7 +4,7 @@
 
 #include "Util/IP.hpp"
 
-namespace Net::Util
+namespace Util
 {
     std::string IP::ipToString(const uint32_t ip)
     {

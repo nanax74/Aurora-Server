@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <thread>
+#include <mutex>
 #include <unordered_map>
 #include <poll.h>
 #include <memory>
@@ -17,12 +18,13 @@ namespace Net::Transport
 
         std::vector<struct pollfd> pollfds;
         std::unordered_map<int, std::shared_ptr<IConnectionSocket>> socketMap;
+        std::mutex mutex;
 
         std::thread thread;
         std::atomic<bool> running{false};
 
     private:
-        void processEvents();
+        void processEvents(std::vector<std::shared_ptr<IConnectionSocket>>& socketsToUnregister);
 
     public:
         void registerSocket(std::shared_ptr<IConnectionSocket> socket);

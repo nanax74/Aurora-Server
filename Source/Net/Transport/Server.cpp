@@ -42,11 +42,11 @@ namespace Net::Transport
     {
         isRunning = false;
         listener.reset();
+        poller.stop();
         if (acceptThread.joinable())
         {
             acceptThread.join();
         }
-        poller.stop();
     }
 
     void Server::acceptLoop()
@@ -81,6 +81,11 @@ namespace Net::Transport
 
         std::vector<std::byte> payload(reader.readBytes(reader.remain()));
         std::unique_ptr<Protocol::IData> protocolData(registry->deserialize(id, payload));
+        if(protocolData == nullptr)
+        {
+            //Debug::Logger::printf("nullptr");
+            return;
+        }
         protocolData->process(std::move(connection));
     }
 }

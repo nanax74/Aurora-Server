@@ -58,8 +58,13 @@ namespace Net::Transport
     bool TcpConnectionSocket::onReceivable()
     {
         auto received = receive();
-        if(!received) return false;
-        if(onReceive) onReceive(shared_from_this(), received.value());
+        if (!received) return false;
+
+        if (onReceive)
+        {
+            std::weak_ptr<IConnectionSocket> weakSelf = shared_from_this();
+            onReceive(weakSelf.lock(), received.value());
+        }
         return true;
     }
 

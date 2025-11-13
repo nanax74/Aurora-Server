@@ -16,7 +16,8 @@ namespace Net::Transport
 
     TcpListenerSocket::~TcpListenerSocket()
     {
-        if (fd.has_value()) {
+        if (fd.has_value())
+        {
             close(fd.value());
         }
     }
@@ -27,7 +28,14 @@ namespace Net::Transport
         if(fd == -1) return nullptr;
 
         int opt = 1;
-        int res = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &opt, sizeof(opt));
+        int res = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+        if(res < 0)
+        {
+            close(fd);
+            return nullptr;
+        }
+
+        res = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &opt, sizeof(opt));
         if(res < 0)
         {
             close(fd);
