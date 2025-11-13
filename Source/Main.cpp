@@ -30,8 +30,14 @@ WUPS_USE_STORAGE("Aurora"); // ON_APPLICATION_REQUESTS_EXITに必要
 
 int haxHandle;
 
+extern "C"
+{
+    void OSSendAppSwitchRequest(uint32_t rampid, void* args, uint32_t argsSize);
+}
+
 DECL_FUNCTION(void, PPCHalt)
 {
+    OSSendAppSwitchRequest(0,0,0);
     OSSleepTicks(OSMillisecondsToTicks(5000));
     __attribute__((aligned(0x40))) uint32_t arguments[0x40 >> 2];
     arguments[0] = 0x74;
