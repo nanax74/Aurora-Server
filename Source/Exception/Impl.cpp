@@ -12,11 +12,13 @@ namespace Exception
 
     std::string DSI::name() { return "DSI"; }
     OSExceptionType DSI::type() { return OSExceptionType::OS_EXCEPTION_TYPE_DSI; }
+
     void DSI::panic(std::string name, OSContext* context)
     {
         std::string message = std::format("{0} Exception occurred from 0x{1:08X} in 0x{2:08X}", name, context->srr0, context->dar);
         OSFatal(message.c_str());
     }
+    
     bool DSI::handle(OSContext* context)
     {
         // DABR による例外でなければクラッシュ

@@ -8,6 +8,7 @@
 -IInclude
 -I../Common/Include
 -ID:/devkitPro/wut/include
+-ID:/devkitPro/wut/usr/include
 -ID:/devkitPro/wups/include
 -ID:/devkitPro/wums/include
 -ID:/devkitPro/devkitPPC/powerpc-eabi/include/c++/15.1.0
