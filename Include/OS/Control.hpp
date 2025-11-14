@@ -2,7 +2,6 @@
 
 #include <vpad/input.h>
 #include <queue>
-#include <variant>
 #include <chrono>
 #include <algorithm>
 
@@ -11,11 +10,11 @@ namespace OS
     class Control
     {
     public:
-        using Clock = std::chrono::steady_clock;
-        using Duration = std::chrono::milliseconds;
+        using Clock     = std::chrono::steady_clock;
+        using Duration  = std::chrono::milliseconds;
         using TimePoint = Clock::time_point;
 
-        // ==== 入力タイプ定義 ====
+        // ==== 各入力タイプ ====
         struct ButtonInput
         {
             VPADButtons button;
@@ -34,83 +33,104 @@ namespace OS
             Duration remaining;
         };
 
-        using InputVariant = std::variant<ButtonInput, LeftStickInput, RightStickInput>;
-
     private:
-        static std::queue<InputVariant> queue;
-        static TimePoint lastTick;  // 前回tick()呼び出し時刻
+        // ==== 種類ごとに独立したキュー ====
+        static std::queue<ButtonInput>     buttonQueue;
+        static std::queue<LeftStickInput>  leftQueue;
+        static std::queue<RightStickInput> rightQueue;
+
+        static TimePoint lastTick;
 
     public:
+        // ==== キューが全部空かどうか ====
         static bool isEmpty()
         {
-            return queue.empty();
+            return buttonQueue.empty() && leftQueue.empty() && rightQueue.empty();
         }
 
-        static void addButton(const uint32_t button, const uint32_t timeMs)
+        // ==== 追加 ====
+        static void addButton(uint32_t button, uint32_t timeMs)
         {
-            queue.push(ButtonInput{ static_cast<VPADButtons>(button), Duration(timeMs) });
+            buttonQueue.push(ButtonInput{
+                static_cast<VPADButtons>(button),
+                Duration(timeMs)
+            });
         }
 
-        static void addLeftStick(const float x, const float y, const uint32_t timeMs)
+        static void addLeftStick(float x, float y, uint32_t timeMs)
         {
-            queue.push(LeftStickInput{ {x, y}, Duration(timeMs) });
+            leftQueue.push(LeftStickInput{
+                {x, y},
+                Duration(timeMs)
+            });
         }
 
-        static void addRightStick(const float x, const float y, const uint32_t timeMs)
+        static void addRightStick(float x, float y, uint32_t timeMs)
         {
-            queue.push(RightStickInput{ {x, y}, Duration(timeMs) });
+            rightQueue.push(RightStickInput{
+                {x, y},
+                Duration(timeMs)
+            });
         }
 
+        // ==== 全てクリア ====
         static void clear()
         {
-            while (!queue.empty()) queue.pop();
-            
+            while (!buttonQueue.empty()) buttonQueue.pop();
+            while (!leftQueue.empty())   leftQueue.pop();
+            while (!rightQueue.empty())  rightQueue.pop();
+
             lastTick = TimePoint{};
         }
 
+        // ==== 時間進行 + 入力適用 ====
         static void tick(VPADStatus& status)
         {
             auto now = Clock::now();
             Duration delta(0);
 
             if (lastTick != TimePoint{})
-            {
                 delta = std::chrono::duration_cast<Duration>(now - lastTick);
-            }
+
             lastTick = now;
 
-            if (queue.empty()) return;
-
-            auto& front = queue.front();
-
-            std::visit([&](auto& input)
+            // ==== BUTTON ====
+            if (!buttonQueue.empty())
             {
-                using T = std::decay_t<decltype(input)>;
-                input.remaining -= std::min(input.remaining, delta);
+                auto& in = buttonQueue.front();
+                in.remaining -= std::min(in.remaining, delta);
 
-                if constexpr (std::is_same_v<T, ButtonInput>)
-                {
-                    status.hold |= input.button;
-                } 
-                else if constexpr (std::is_same_v<T, LeftStickInput>)
-                {
-                    status.leftStick.x += input.vec.x;
-                    status.leftStick.y += input.vec.y;
-                } 
-                else if constexpr (std::is_same_v<T, RightStickInput>)
-                {
-                    status.rightStick.x += input.vec.x;
-                    status.rightStick.y += input.vec.y;
-                }
-            }, front);
+                status.hold |= in.button;
 
-            // 入力が終了したら次へ
-            bool expired = std::visit([](auto& input)
+                if (in.remaining.count() <= 0)
+                    buttonQueue.pop();
+            }
+
+            // ==== LEFT STICK ====
+            if (!leftQueue.empty())
             {
-                return input.remaining.count() <= 0;
-            }, front);
+                auto& in = leftQueue.front();
+                in.remaining -= std::min(in.remaining, delta);
 
-            if (expired) queue.pop();
+                status.leftStick.x += in.vec.x;
+                status.leftStick.y += in.vec.y;
+
+                if (in.remaining.count() <= 0)
+                    leftQueue.pop();
+            }
+
+            // ==== RIGHT STICK ====
+            if (!rightQueue.empty())
+            {
+                auto& in = rightQueue.front();
+                in.remaining -= std::min(in.remaining, delta);
+
+                status.rightStick.x += in.vec.x;
+                status.rightStick.y += in.vec.y;
+
+                if (in.remaining.count() <= 0)
+                    rightQueue.pop();
+            }
         }
 
         static void resetClock()
@@ -119,7 +139,10 @@ namespace OS
         }
     };
 
-    // ==== staticメンバ定義 ====
-    inline std::queue<Control::InputVariant> Control::queue;
+    // ==== static メンバ定義 ====
+    inline std::queue<Control::ButtonInput>     Control::buttonQueue;
+    inline std::queue<Control::LeftStickInput>  Control::leftQueue;
+    inline std::queue<Control::RightStickInput> Control::rightQueue;
+
     inline Control::TimePoint Control::lastTick{};
 }
